@@ -31,7 +31,6 @@ fn run_cmd(cmd_: String) -> Result {
 
     match cmd {
         "exit 0" => {
-            println!("Exiting...");
             return Result::Exit;
         },
         _ => {
