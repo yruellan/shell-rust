@@ -54,7 +54,11 @@ fn run_cmd(input: String) -> Result {
         else if valid_cmds.contains(&args[1].trim()) {
             println!("{} is a shell builtin", args[1].trim());
             return Result::Ok;
-        } else {return Result::Error;}
+        } else {
+            println!("{}: not found", args[1].trim());
+            return Result::Error;
+        }
+
     } else {
         println!("{}: command not found", cmd.trim());
         return Result::CommandNotFound;
