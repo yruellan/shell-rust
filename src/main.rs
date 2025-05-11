@@ -3,7 +3,8 @@ use std::io::{self, Write};
 
 enum Result {
     CommandNotFound,
-    Exit
+    Exit,
+    Ok
 }
 
 fn main() {
@@ -29,13 +30,15 @@ fn run_cmd(cmd_: String) -> Result {
 
     // println!("Running command: {}, ({})", cmd, cmd == "exit 0");
 
-    match cmd {
-        "exit 0" => {
-            return Result::Exit;
-        },
-        _ => {
-            println!("{}: command not found", cmd.trim());
-            return Result::CommandNotFound;
-        }
+    if cmd == "exit 0" {
+        return Result::Exit;
+    } else if cmd.starts_with("echo "){
+        let args = &cmd[5..] ;
+        println!("{}", args) ;
+        return Result::Ok;
+    } else {
+        println!("{}: command not found", cmd.trim());
+        return Result::CommandNotFound;
     }
+    
 }
