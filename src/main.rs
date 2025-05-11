@@ -27,7 +27,7 @@ fn main() {
 
 fn run_cmd(input: String) -> Result {
 
-    let args : Vec<&str> = input.split(' ').collect() ;
+    let args : Vec<&str> = input.split(' ').map(|x| x.trim() ).collect();
     let nargs = args.len() ;
 
     let valid_cmds = vec![
@@ -51,11 +51,11 @@ fn run_cmd(input: String) -> Result {
     } else if cmd == "type" {
         
         if nargs < 2 {return Result::Error}
-        else if valid_cmds.contains(&args[1].trim()) {
-            println!("{} is a shell builtin", args[1].trim());
+        else if valid_cmds.contains(&args[1]) {
+            println!("{} is a shell builtin", args[1]);
             return Result::Ok;
         } else {
-            println!("{}: not found", args[1].trim());
+            println!("{}: not found", args[1]);
             return Result::Error;
         }
 
