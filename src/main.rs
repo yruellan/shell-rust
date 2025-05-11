@@ -4,7 +4,8 @@ use std::io::{self, Write};
 enum Result {
     CommandNotFound,
     Exit,
-    Ok
+    Ok,
+    Error
 }
 
 fn main() {
@@ -24,18 +25,36 @@ fn main() {
     }
 }
 
-fn run_cmd(cmd_: String) -> Result {
+fn run_cmd(input: String) -> Result {
 
-    let cmd = cmd_.trim();
+    let args : Vec<&str> = input.split(' ').collect() ;
+    let nargs = args.len() ;
 
-    // println!("Running command: {}, ({})", cmd, cmd == "exit 0");
+    let valid_cmds = vec![
+        "type","echo","exit"
+    ];
 
-    if cmd == "exit 0" {
-        return Result::Exit;
-    } else if cmd.starts_with("echo "){
-        let args = &cmd[5..] ;
-        println!("{}", args) ;
+    if nargs == 0 {
+        return Result::Ok ;
+    }
+    let cmd = args[0] ;
+
+    if cmd == "exit"{
+        if nargs >= 2 && args[1] == "0" {return Result::Exit;}
+        else {return Result::Error;}
+    } else if cmd == "echo" {
+        for i in 1..nargs {
+            print!("{} ", args[i].trim());
+        }
+        println!("");
         return Result::Ok;
+    } else if cmd == "type" {
+        
+        if nargs < 2 {return Result::Error}
+        else if valid_cmds.contains(&args[1].trim()) {
+            println!("{} is a shell builtin", args[1].trim());
+            return Result::Ok;
+        } else {return Result::Error;}
     } else {
         println!("{}: command not found", cmd.trim());
         return Result::CommandNotFound;
