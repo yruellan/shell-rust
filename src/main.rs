@@ -32,18 +32,6 @@ fn run_cmd(input: String) -> CmdRes {
     let args : Vec<&str> = input.split(' ').map(|x| x.trim() ).collect();
     let nargs = args.len() ;
 
-    // let path: Vec<&str> = 
-    //     env::var_os("PATH")
-    //     .unwrap_or(OsString::new())
-    //     .to_str()
-    //     .unwrap_or("")
-    //     .split(":")
-    //     .collect();
-
-    let valid_cmds = vec![
-        "type","echo","exit"
-    ];
-
     if nargs == 0 {
         return CmdRes::Ok ;
     }
@@ -61,14 +49,7 @@ fn run_cmd(input: String) -> CmdRes {
     } else if cmd == "type" {
         
         if nargs < 2 {return CmdRes::Error}
-        // else if valid_cmds.contains(&args[1]) {
-        //     println!("{} is a shell builtin", args[1]);
-        //     return CmdRes::Ok;
-        // } else {
-        //     
-        // }
-
-        // let key = args[1];
+        
         match env::var_os("PATH") {
             Some(paths) => {
                 for path in env::split_paths(&paths) {
@@ -80,14 +61,17 @@ fn run_cmd(input: String) -> CmdRes {
                             Result::Ok(file_path) 
                                 if file_path.path().file_name().unwrap() == args[1] 
                             => {
-                                println!("{} is {:?}", args[1], file_path.path());
+                                let path_name = file_path.path()
+                                    .into_os_string()
+                                    .to_owned();
+                                println!("{} is {}", args[1], path_name.to_str().unwrap());
                                 return CmdRes::Ok;
                             },
                             _ => {}
                         };
                     }}
                 }
-                
+
                 println!("{}: not found", args[1]);
                 return CmdRes::Error;
             }
