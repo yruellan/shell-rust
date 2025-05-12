@@ -49,6 +49,11 @@ fn run_cmd(input: String) -> CmdRes {
     } else if cmd == "type" {
         
         if nargs < 2 {return CmdRes::Error}
+
+        if vec!["echo", "type", "exit"].contains(&args[1]) {
+            println!("{} is a shell builtin", args[1]);
+            return CmdRes::Ok;
+        }
         
         match env::var_os("PATH") {
             Some(paths) => {
