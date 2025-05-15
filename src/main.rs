@@ -2,12 +2,25 @@
 use std::io::{self, Write};
 use std::env;
 use std::fs;
+use std::process::Command;
 
 enum CmdRes {
-    CommandNotFound,
     Exit,
     Ok,
     Error
+}
+
+enum BuiltinCmd {
+    Echo,
+    Exit,
+    Type
+}
+
+enum CmdType {
+    CommandNotFound,
+    ShellBuiltin(BuiltinCmd),
+    Path(String),
+    Void
 }
 
 fn main() {
@@ -27,6 +40,49 @@ fn main() {
     }
 }
 
+fn find_cmd(cmd : &str) ->  CmdType{
+    match cmd {
+        "" => return CmdType::Void,
+        "echo" => return CmdType::ShellBuiltin(BuiltinCmd::Echo),
+        "exit" => return CmdType::ShellBuiltin(BuiltinCmd::Exit),
+        "type" => return CmdType::ShellBuiltin(BuiltinCmd::Type),
+        _ => {}
+    }
+    
+    match env::var_os("PATH") {
+        Some(paths) => {
+            for path in env::split_paths(&paths) {
+
+                if let Result::Ok(files) = fs::read_dir(path) {
+                for file in files {
+
+                    match file {
+                        Result::Ok(file_path) 
+                            if file_path.path().file_name().unwrap() == cmd 
+                        => {
+                            let path_name = file_path.path()
+                                .into_os_string()
+                                .to_owned();
+                            
+                            return CmdType::Path(
+                                path_name.to_str().unwrap().to_owned()
+                            );
+                        },
+                        _ => {}
+                    };
+                }}
+            }
+
+            
+            return CmdType::CommandNotFound ;
+        }
+        None => {
+            println!("PATH is not defined in the environment.");
+            return CmdType::CommandNotFound ;
+        }
+    }
+}
+
 fn run_cmd(input: String) -> CmdRes {
 
     let args : Vec<&str> = input.split(' ').map(|x| x.trim() ).collect();
@@ -37,58 +93,50 @@ fn run_cmd(input: String) -> CmdRes {
     }
     let cmd = args[0] ;
 
-    if cmd == "exit"{
-        if nargs >= 2 && args[1] == "0" {return CmdRes::Exit;}
-        else {return CmdRes::Error;}
-    } else if cmd == "echo" {
-        for i in 1..nargs {
-            print!("{} ", args[i].trim());
+    match find_cmd(args[0]) {
+        CmdType::Void => {
+            return CmdRes::Ok;
+        },
+        CmdType::CommandNotFound => {
+            println!("{}: command not found", cmd.trim());
+            return CmdRes::Error;
+        },
+        CmdType::ShellBuiltin(BuiltinCmd::Exit) => {
+            if nargs >= 2 && args[1] == "0" {return CmdRes::Exit;}
+            else {return CmdRes::Error;}
         }
-        println!("");
-        return CmdRes::Ok;
-    } else if cmd == "type" {
-        
-        if nargs < 2 {return CmdRes::Error}
-
-        if vec!["echo", "type", "exit"].contains(&args[1]) {
-            println!("{} is a shell builtin", args[1]);
+        CmdType::ShellBuiltin(BuiltinCmd::Echo) => {
+            for i in 1..nargs {
+                print!("{} ", args[i].trim());
+            }
+            println!("");
             return CmdRes::Ok;
         }
-        
-        match env::var_os("PATH") {
-            Some(paths) => {
-                for path in env::split_paths(&paths) {
+        CmdType::ShellBuiltin(BuiltinCmd::Type) => {
+            if nargs < 2 {return CmdRes::Error}
 
-                    if let Result::Ok(files) = fs::read_dir(path) {
-                    for file in files {
-
-                        match file {
-                            Result::Ok(file_path) 
-                                if file_path.path().file_name().unwrap() == args[1] 
-                            => {
-                                let path_name = file_path.path()
-                                    .into_os_string()
-                                    .to_owned();
-                                println!("{} is {}", args[1], path_name.to_str().unwrap());
-                                return CmdRes::Ok;
-                            },
-                            _ => {}
-                        };
-                    }}
-                }
-
-                println!("{}: not found", args[1]);
-                return CmdRes::Error;
+            match find_cmd(args[1]) {
+                CmdType::Void => println!("{}: not found", args[1]),
+                CmdType::CommandNotFound => println!("{}: not found", args[1]),
+                CmdType::ShellBuiltin(_) => println!("{} is a shell builtin", args[1]),
+                CmdType::Path(path_name) => println!("{} is {}", args[1], path_name)
             }
-            None => {
-                println!("PATH is not defined in the environment.");
-                return CmdRes::Error;
-            }
+
+            return CmdRes::Ok;
         }
+        CmdType::Path(path) => {
 
-    } else {
-        println!("{}: command not found", cmd.trim());
-        return CmdRes::CommandNotFound;
+            // println!("run: {} | {}", path, args[1..].join(" "));
+
+            let mut cmd = Command::new(path) ;
+            for arg in args[1..].iter() {
+                cmd.arg(arg);
+            }
+            cmd.status()
+                .expect("failed to execute process");
+
+            return CmdRes::Ok;
+        }
     }
     
 }
