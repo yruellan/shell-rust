@@ -127,8 +127,6 @@ fn run_cmd(input: String) -> CmdRes {
         }
         CmdType::Path(name,_) => {
 
-            // println!("run: {} | {}", path, args[1..].join(" "));
-
             let mut cmd = Command::new(name) ;
             for arg in args[1..].iter() {
                 cmd.arg(arg);
