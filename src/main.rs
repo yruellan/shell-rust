@@ -89,17 +89,47 @@ fn find_cmd(cmd : &str) ->  CmdType{
     }
 }
 
+fn parse_cmd(cmd: String) -> Vec<String> {
+
+    let mut args = vec![];
+    let mut is_in_quote = false;
+    let mut last_i = 0;
+
+    for (i,c) in cmd.chars().enumerate() {
+        if c == '\'' && is_in_quote {
+            args.push(cmd[last_i..i].trim().to_owned());
+            is_in_quote = false;
+            last_i = i+1;
+        } else if c == '\'' {
+            is_in_quote = true ;
+            last_i = i+1 ;
+        } else if (c == ' ' || c=='\n') && !is_in_quote {
+            if cmd[last_i..i].trim() != "" {
+                args.push(cmd[last_i..i].trim().to_owned());
+            }
+            last_i = i+1 ;
+        }
+    }
+    // args.retain(|x| x != "");
+
+    // for x in args {
+    //     println!("_{x}_");
+    // }
+
+    return args ;
+}
+
 fn run_cmd(input: String) -> CmdRes {
 
-    let args : Vec<&str> = input.split(' ').map(|x| x.trim() ).collect();
+    let args = parse_cmd(input);
     let nargs = args.len() ;
 
     if nargs == 0 {
         return CmdRes::Ok ;
     }
-    let cmd = args[0] ;
+    let cmd = &args[0] ;
 
-    match find_cmd(args[0]) {
+    match find_cmd(&args[0]) {
         CmdType::Void => {
             return CmdRes::Ok;
         }
@@ -121,7 +151,7 @@ fn run_cmd(input: String) -> CmdRes {
         CmdType::ShellBuiltin(BuiltinCmd::Type) => {
             if nargs < 2 {return CmdRes::Error}
 
-            match find_cmd(args[1]) {
+            match find_cmd(&args[1]) {
                 CmdType::Void => println!("{}: not found", args[1]),
                 CmdType::CommandNotFound => println!("{}: not found", args[1]),
                 CmdType::ShellBuiltin(_) => println!("{} is a shell builtin", args[1]),
