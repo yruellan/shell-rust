@@ -139,7 +139,14 @@ fn run_cmd(input: String) -> CmdRes {
         }
         CmdType::ShellBuiltin(BuiltinCmd::Cd) => {
 
-            let new_path = Path::new(args[1]) ;
+            let home = env::var_os("HOME")
+                .unwrap()
+                .into_string()
+                .unwrap();
+            let path_str = args[1]
+                .to_owned()
+                .replace("~", &home) ;
+            let new_path = Path::new(path_str.as_str());
 
             match env::set_current_dir(new_path) {
                 Result::Ok(_) => {
