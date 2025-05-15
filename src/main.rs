@@ -92,7 +92,7 @@ fn find_cmd(cmd : &str) ->  CmdType{
 fn parse_cmd(cmd_: String) -> Vec<String> {
 
     let mut args = vec![];
-    let mut is_in_quote = false;
+    let mut delimiter = None;
     let mut last_i = 0;
 
     let cmd = cmd_
@@ -100,13 +100,14 @@ fn parse_cmd(cmd_: String) -> Vec<String> {
         .replace("\"\"", "");
 
     for (i,c) in cmd.chars().enumerate() {
-        if c == '\'' || c == '\"' {
-            if is_in_quote {
-                args.push(cmd[last_i..i].trim().to_owned());
-            } 
-            is_in_quote = !is_in_quote;
+        if (c == '\'' || c == '\"') && delimiter == None {
+            delimiter = Some(c);
             last_i = i+1 ;
-        } else if (c == ' ' || c=='\n') && !is_in_quote {
+        } else if delimiter == Some(c) {
+            args.push(cmd[last_i..i].trim().to_owned());
+            delimiter = None ;
+            last_i = i+1 ;
+        } else if (c == ' ' || c=='\n') && delimiter == None {
             if cmd[last_i..i].trim() != "" {
                 args.push(cmd[last_i..i].trim().to_owned());
             }
@@ -115,7 +116,7 @@ fn parse_cmd(cmd_: String) -> Vec<String> {
     }
     // args.retain(|x| x != "");
 
-    // for x in args {
+    // for x in &args {
     //     println!("_{x}_");
     // }
 
