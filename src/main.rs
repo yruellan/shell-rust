@@ -19,7 +19,7 @@ enum BuiltinCmd {
 enum CmdType {
     CommandNotFound,
     ShellBuiltin(BuiltinCmd),
-    Path(String),
+    Path(String,String),
     Void
 }
 
@@ -65,6 +65,7 @@ fn find_cmd(cmd : &str) ->  CmdType{
                                 .to_owned();
                             
                             return CmdType::Path(
+                                cmd.to_owned(),
                                 path_name.to_str().unwrap().to_owned()
                             );
                         },
@@ -119,16 +120,16 @@ fn run_cmd(input: String) -> CmdRes {
                 CmdType::Void => println!("{}: not found", args[1]),
                 CmdType::CommandNotFound => println!("{}: not found", args[1]),
                 CmdType::ShellBuiltin(_) => println!("{} is a shell builtin", args[1]),
-                CmdType::Path(path_name) => println!("{} is {}", args[1], path_name)
+                CmdType::Path(name,path_name) => println!("{} is {}", name, path_name)
             }
 
             return CmdRes::Ok;
         }
-        CmdType::Path(path) => {
+        CmdType::Path(name,_) => {
 
             // println!("run: {} | {}", path, args[1..].join(" "));
 
-            let mut cmd = Command::new(path) ;
+            let mut cmd = Command::new(name) ;
             for arg in args[1..].iter() {
                 cmd.arg(arg);
             }
