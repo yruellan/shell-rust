@@ -1,8 +1,9 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::env;
 use std::fs;
+use std::env;
 use std::process::Command;
+use std::path::Path;
 
 enum CmdRes {
     Exit,
@@ -15,6 +16,7 @@ enum BuiltinCmd {
     Exit,
     Type,
     Pwd,
+    Cd,
 }
 
 enum CmdType {
@@ -48,6 +50,7 @@ fn find_cmd(cmd : &str) ->  CmdType{
         "exit" => return CmdType::ShellBuiltin(BuiltinCmd::Exit),
         "type" => return CmdType::ShellBuiltin(BuiltinCmd::Type),
         "pwd" => return CmdType::ShellBuiltin(BuiltinCmd::Pwd),
+        "cd" => return CmdType::ShellBuiltin(BuiltinCmd::Cd),
         _ => {}
     }
     
@@ -128,17 +131,27 @@ fn run_cmd(input: String) -> CmdRes {
             return CmdRes::Ok;
         }
         CmdType::ShellBuiltin(BuiltinCmd::Pwd) => {
-            // let mut cmd = Command::new("pwd") ;
-            // for arg in args[1..].iter() {
-            //     cmd.arg(arg);
-            // }
-            // cmd.status()
-            //     .expect("failed to execute process");
-
+            
             let current_dir = env::current_dir().unwrap();
             println!("{}", current_dir.display());
 
             return CmdRes::Ok;
+        }
+        CmdType::ShellBuiltin(BuiltinCmd::Cd) => {
+
+            let new_path = Path::new(args[1]) ;
+
+            match env::set_current_dir(new_path) {
+                Result::Ok(_) => {
+                    return CmdRes::Ok;
+                }
+                Result::Err(_) => {
+                    println!("cd: {}: No such file or directory", args[1]);
+                    return CmdRes::Error;
+                }
+            }
+            
+            
         }
         CmdType::Path(name,_) => {
 
