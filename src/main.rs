@@ -128,12 +128,15 @@ fn run_cmd(input: String) -> CmdRes {
             return CmdRes::Ok;
         }
         CmdType::ShellBuiltin(BuiltinCmd::Pwd) => {
-            let mut cmd = Command::new("pwd") ;
-            for arg in args[1..].iter() {
-                cmd.arg(arg);
-            }
-            cmd.status()
-                .expect("failed to execute process");
+            // let mut cmd = Command::new("pwd") ;
+            // for arg in args[1..].iter() {
+            //     cmd.arg(arg);
+            // }
+            // cmd.status()
+            //     .expect("failed to execute process");
+
+            let current_dir = env::current_dir().unwrap();
+            println!("{}", current_dir.display());
 
             return CmdRes::Ok;
         }
