@@ -96,11 +96,11 @@ fn run_cmd(input: String) -> CmdRes {
     match find_cmd(args[0]) {
         CmdType::Void => {
             return CmdRes::Ok;
-        },
+        }
         CmdType::CommandNotFound => {
             println!("{}: command not found", cmd.trim());
             return CmdRes::Error;
-        },
+        }
         CmdType::ShellBuiltin(BuiltinCmd::Exit) => {
             if nargs >= 2 && args[1] == "0" {return CmdRes::Exit;}
             else {return CmdRes::Error;}
