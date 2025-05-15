@@ -89,19 +89,22 @@ fn find_cmd(cmd : &str) ->  CmdType{
     }
 }
 
-fn parse_cmd(cmd: String) -> Vec<String> {
+fn parse_cmd(cmd_: String) -> Vec<String> {
 
     let mut args = vec![];
     let mut is_in_quote = false;
     let mut last_i = 0;
 
+    let cmd = cmd_
+        .replace("\'\'", "")
+        .replace("\"\"", "");
+
     for (i,c) in cmd.chars().enumerate() {
-        if c == '\'' && is_in_quote {
-            args.push(cmd[last_i..i].trim().to_owned());
-            is_in_quote = false;
-            last_i = i+1;
-        } else if c == '\'' {
-            is_in_quote = true ;
+        if c == '\'' || c == '\"' {
+            if is_in_quote {
+                args.push(cmd[last_i..i].trim().to_owned());
+            } 
+            is_in_quote = !is_in_quote;
             last_i = i+1 ;
         } else if (c == ' ' || c=='\n') && !is_in_quote {
             if cmd[last_i..i].trim() != "" {
