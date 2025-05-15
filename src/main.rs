@@ -13,7 +13,8 @@ enum CmdRes {
 enum BuiltinCmd {
     Echo,
     Exit,
-    Type
+    Type,
+    Pwd,
 }
 
 enum CmdType {
@@ -46,6 +47,7 @@ fn find_cmd(cmd : &str) ->  CmdType{
         "echo" => return CmdType::ShellBuiltin(BuiltinCmd::Echo),
         "exit" => return CmdType::ShellBuiltin(BuiltinCmd::Exit),
         "type" => return CmdType::ShellBuiltin(BuiltinCmd::Type),
+        "pwd" => return CmdType::ShellBuiltin(BuiltinCmd::Pwd),
         _ => {}
     }
     
@@ -122,6 +124,16 @@ fn run_cmd(input: String) -> CmdRes {
                 CmdType::ShellBuiltin(_) => println!("{} is a shell builtin", args[1]),
                 CmdType::Path(name,path_name) => println!("{} is {}", name, path_name)
             }
+
+            return CmdRes::Ok;
+        }
+        CmdType::ShellBuiltin(BuiltinCmd::Pwd) => {
+            let mut cmd = Command::new("pwd") ;
+            for arg in args[1..].iter() {
+                cmd.arg(arg);
+            }
+            cmd.status()
+                .expect("failed to execute process");
 
             return CmdRes::Ok;
         }
